@@ -263,26 +263,39 @@ describe('API REST de Productos (MySQL)', () => {
     });
 
     it('debería reducir el número de productos después de eliminar', async () => {
+      // Crear primer producto y esperar
       const producto1 = await ProductoModel.create({ nombre: 'Producto 1', und: 'unidad', precio: 10, cantidad: 1 });
-      const producto2 = await ProductoModel.create({ nombre: 'Producto 2', und: 'unidad', precio: 20, cantidad: 2 });
+      await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Pequeña espera para asegurar que los productos están en la DB
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Verificar que el primer producto existe
+      let verificar1 = await ProductoModel.getById(producto1.id);
+      expect(verificar1).toBeTruthy();
+      
+      // Crear segundo producto y esperar
+      const producto2 = await ProductoModel.create({ nombre: 'Producto 2', und: 'unidad', precio: 20, cantidad: 2 });
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Verificar que ambos productos existen
-      const verificar1 = await ProductoModel.getById(producto1.id);
+      verificar1 = await ProductoModel.getById(producto1.id);
       const verificar2 = await ProductoModel.getById(producto2.id);
       expect(verificar1).toBeTruthy();
       expect(verificar2).toBeTruthy();
+      
+      // Verificar que hay 2 productos antes de eliminar
+      const beforeDelete = await request(app).get('/api/productos');
+      expect(beforeDelete.body.length).toBe(2);
 
+      // Eliminar el segundo producto
       const deleteResponse = await request(app).delete(`/api/productos/${producto2.id}`);
       expect(deleteResponse.status).toBe(200);
       
-      // Pequeña espera después de eliminar
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Espera después de eliminar
+      await new Promise(resolve => setTimeout(resolve, 200));
       
+      // Verificar que ahora hay solo 1 producto
       const response = await request(app).get('/api/productos');
       expect(response.body.length).toBe(1);
+      expect(response.body[0].nombre).toBe('Producto 1');
     });
   });
 });
