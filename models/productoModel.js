@@ -89,6 +89,7 @@ class ProductoModel {
   }
 
   // Eliminar un producto
+  
   static async delete(id) {
     try {
       // Primero obtener el producto antes de eliminarlo
