@@ -11,6 +11,9 @@ module.exports = {
     '**/__tests__/**/*.test.js'
   ],
   verbose: true,
+  // Ejecutar tests de forma secuencial para evitar conflictos en MySQL
+  maxWorkers: 1,
+  testTimeout: 30000,
   // Opcional: configurar reporters para CI/CD
   reporters: [
     'default',

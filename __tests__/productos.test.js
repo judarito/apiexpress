@@ -4,6 +4,11 @@ const ProductoModel = require('../models/productoModel');
 const { pool } = require('../config/database');
 
 describe('API REST de Productos (MySQL)', () => {
+  // Limpiar la base de datos antes de todos los tests
+  beforeAll(async () => {
+    await ProductoModel.deleteAll();
+  });
+
   // Limpiar la base de datos antes de cada test
   beforeEach(async () => {
     await ProductoModel.deleteAll();
@@ -176,6 +181,13 @@ describe('API REST de Productos (MySQL)', () => {
         cantidad: 20 
       });
 
+      // Pequeña espera para asegurar que el producto está en la DB
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Verificar que el producto existe antes de actualizar
+      const verificar = await ProductoModel.getById(producto.id);
+      expect(verificar).toBeTruthy();
+
       const datosActualizados = {
         precio: 75.00
       };
@@ -229,6 +241,13 @@ describe('API REST de Productos (MySQL)', () => {
         cantidad: 25 
       });
 
+      // Pequeña espera para asegurar que el producto está en la DB
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Verificar que el producto existe antes de eliminar
+      const verificar = await ProductoModel.getById(producto.id);
+      expect(verificar).toBeTruthy();
+
       const response = await request(app).delete(`/api/productos/${producto.id}`);
       
       expect(response.status).toBe(200);
@@ -244,10 +263,23 @@ describe('API REST de Productos (MySQL)', () => {
     });
 
     it('debería reducir el número de productos después de eliminar', async () => {
-      await ProductoModel.create({ nombre: 'Producto 1', und: 'unidad', precio: 10, cantidad: 1 });
+      const producto1 = await ProductoModel.create({ nombre: 'Producto 1', und: 'unidad', precio: 10, cantidad: 1 });
       const producto2 = await ProductoModel.create({ nombre: 'Producto 2', und: 'unidad', precio: 20, cantidad: 2 });
       
-      await request(app).delete(`/api/productos/${producto2.id}`);
+      // Pequeña espera para asegurar que los productos están en la DB
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Verificar que ambos productos existen
+      const verificar1 = await ProductoModel.getById(producto1.id);
+      const verificar2 = await ProductoModel.getById(producto2.id);
+      expect(verificar1).toBeTruthy();
+      expect(verificar2).toBeTruthy();
+
+      const deleteResponse = await request(app).delete(`/api/productos/${producto2.id}`);
+      expect(deleteResponse.status).toBe(200);
+      
+      // Pequeña espera después de eliminar
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       const response = await request(app).get('/api/productos');
       expect(response.body.length).toBe(1);
