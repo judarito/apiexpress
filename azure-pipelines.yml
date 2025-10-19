@@ -1,0 +1,46 @@
+# Azure Pipeline para CI/CD
+trigger:
+  - main
+  - develop
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+strategy:
+  matrix:
+    node_18:
+      node_version: '18.x'
+    node_20:
+      node_version: '20.x'
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: $(node_version)
+  displayName: 'Instalar Node.js'
+
+- script: |
+    npm ci
+  displayName: 'Instalar dependencias'
+
+- script: |
+    npm test
+  displayName: 'Ejecutar tests'
+
+- script: |
+    npm run test:coverage
+  displayName: 'Generar cobertura de código'
+
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: '**/junit.xml'
+    failTaskOnFailedTests: true
+  displayName: 'Publicar resultados de tests'
+
+- task: PublishCodeCoverageResults@1
+  inputs:
+    codeCoverageTool: 'Cobertura'
+    summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml'
+  displayName: 'Publicar cobertura de código'

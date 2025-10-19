@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+.vscode
+coverage
+__tests__
+*.md
+azure-pipelines.yml
+.github
